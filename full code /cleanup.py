@@ -1,9 +1,9 @@
 """dataframe module"""
 import pandas as pd
 
-RAW_DATA_PATH = '../raw_data/'
+RAW_DATA_PATH = 'raw_data/'
 
-CLEANED_DATA_PATH = '../cleaned_data/'
+CLEANED_DATA_PATH = 'cleaned_data/'
 
 LOCATION_FILE_NAME = ['SonLa','LangSon', 'HaNoi',
                     'NgheAn', 'DaNang', 'LamDong',
@@ -13,8 +13,8 @@ LOCATION_VALUES = ['Sơn La','Lạng Sơn', 'Hà Nội',
                     'Nghệ An', 'Đà Nẵng', 'Lâm Đồng',
                     'Hồ Chí Minh','Bến Tre']
 
-LOCATION_NAME_MAP = {LOCATION_FILE_NAME[i] : LOCATION_VALUES[i] 
-                     for i in range(len(LOCATION_VALUES)) }
+# LOCATION_NAME_MAP = {LOCATION_FILE_NAME[i] : LOCATION_VALUES[i]
+#                      for i in range(len(LOCATION_VALUES)) }
 
 SAVE_COLS = [ 'Address', 'Datetime', 'DatetimeEpoch',
             'Tempmax', 'Tempmin', 'Temp', 'Dew', 
@@ -23,7 +23,6 @@ SAVE_COLS = [ 'Address', 'Datetime', 'DatetimeEpoch',
             'Pressure', 'Cloudcover', 'Visibility', 'Solarradiation', 
             'Solarenergy', 'Uvindex', 'Moonphase' ]
 
-dataframe_list = []
 
 def read_raw_datas() -> list:
     """Takes a location file name and return 
@@ -39,9 +38,9 @@ def read_raw_datas() -> list:
 def add_address_column(df, location_name) -> pd.DataFrame:
     """Drop old address columns and add standardized one"""
     if 'Address' in df.columns:
-        df.drop('Address')
+        df.drop('Address', axis=1)
     if 'address' in df.columns:
-        df.drop('address')
+        df.drop('address', axis=1)
 
     address_list = [location_name for _ in range(len(df.index))]
     df = df.assign(Address = pd.Series(address_list))
@@ -65,5 +64,19 @@ def upper_case_name(df) -> pd.DataFrame:
 
     return df
 
+def export_cleaned_df(df, location_name):
+    """export cleaned up dataframe to csv files"""
+    df.to_csv(CLEANED_DATA_PATH + f'{location_name}.csv', index=False)
 
 
+def main():
+    """Main function"""
+    dataframe_list = read_raw_datas()
+    for i, df in enumerate(dataframe_list):
+        df = add_address_column(df, LOCATION_VALUES[i])
+        df = upper_case_name(df)
+        df = drop_unnecessary_columns(df)
+        export_cleaned_df(df, LOCATION_FILE_NAME[i])
+
+if __name__ == "__main__":
+    main()
