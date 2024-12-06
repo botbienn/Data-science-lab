@@ -1,12 +1,9 @@
 import pandas as pd
 import numpy as np
-from pandas.core.common import random_state
-from pandas.io.common import tarfile
-# from pandas.core.array_algos.replace import compare_or_regex_search
-from sklearn.pipeline import make_pipeline
+from pandas.core.array_algos.replace import compare_or_regex_search
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score, accuracy_score
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.preprocessing import StandardScaler
 import joblib
 
@@ -27,6 +24,14 @@ def read_location_data(loc_list):
     result = [pd.read_csv(f'../data/{loc}.csv') for loc in loc_list]
     return result
 
+
+'''------------------------------------------------------------------------'''
+# Phân tích lựa chọn các thuộc tính cần để sử dụng cho model
+
+def extract_corr_matrix(df_s: list):
+    result_df = pd.concat([df.select_dtypes(exclude='object') for df in df_s], 
+                          ignore_index=True)
+    return result_df.corr()
 
 '''------------------------------------------------------------------------'''
 def plot_corr_matrix(corr_mat): 
@@ -52,45 +57,15 @@ def get_high_curr_attri(corr_mat):
     return result
 
 '''------------------------------------------------------------------------'''
-def modeling(input_df: pd.DataFrame, parameter_attribute: list):
-    TARGET = 'Humidity'
-    pipe = make_pipeline(StandardScaler(),
-                         LinearRegression())
-    X = input_df[parameter_attribute]
-    y = input_df[TARGET]
-    print(X.head())
-    print(y.head())
-    X_train, X_test, y_train, y_test = train_test_split(X, y,
-                                                        test_size=0.2, 
-                                                        random_state=8412)
-    print(type(X_train))
-    print(type(X_test))
-    print(type(y_train))
-    print(type(y_test))
-
-    pipe.fit(X_train, y_train)
-    print(type(pipe.predict(X_test)))
-    print(type(np.array(y_test.to_list())))
-
-    #print(type(pipe.predict(X_test)))
-    print(r2_score(pipe.predict(X_test), np.array(y_test.to_list())))
-
-'''------------------------------------------------------------------------'''
 
 LOCATIONS_LIST = get_file_list()
 
 df_list = read_location_data(LOCATIONS_LIST) 
+corr_mat = extract_corr_matrix(df_list)
 
-result_df = pd.concat([df.select_dtypes(exclude='object') for df in df_list], 
-                      ignore_index=True)
-
-corr_mat =  result_df.corr()
-                     
-#plot_corr_matrix(corr_mat)
+plot_corr_matrix(corr_mat)
 attri_list = get_high_curr_attri(corr_mat)
-#print(type(attri_list))
-#print(attri_list)
-modeling(result_df, attri_list)
+print(attri_list)
 
 print('end')
 
